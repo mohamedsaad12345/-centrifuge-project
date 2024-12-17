@@ -1,0 +1,82 @@
+code
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+int buzzer = 4;
+int button1 = 7;
+int button2 = 8;
+int button3 = 9;
+int button4 = 10;
+int relay = 11;
+int minutes = 0;
+int seconds = 0;
+bool timerRunning = false;
+unsigned long previousMillis = 0;
+
+void setup() {
+  lcd.init();
+  lcd.clear();
+  lcd.backlight();
+
+  pinMode(buzzer, OUTPUT);
+  pinMode(button1, INPUT_PULLUP);
+  pinMode(button2, INPUT_PULLUP);
+  pinMode(button3, INPUT_PULLUP);
+  pinMode(button4, INPUT_PULLUP);
+  pinMode(relay, OUTPUT);
+  digitalWrite(relay, HIGH);
+}
+void loop() {
+  if (timerRunning) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= 1000) {
+      previousMillis = currentMillis;
+      if (seconds > 0) {
+        seconds--;
+      } else if (minutes > 0) {
+        minutes--;
+        seconds = 59;
+      } else {
+        timerRunning = false;
+        digitalWrite(relay, HIGH);
+        digitalWrite(buzzer, HIGH);
+        delay(2000);
+        digitalWrite(buzzer, LOW);
+      }
+    }
+    if (seconds == 0 && minutes == 0) {
+      digitalWrite(relay, HIGH);
+    } else {
+      digitalWrite(relay, LOW);
+    }
+  } 
+  
+  lcd.setCursor(2, 0);
+  lcd.print("Timer: ");
+  lcd.print(minutes);
+  lcd.print(":");
+  if (seconds < 10) {
+    lcd.print("0");
+  }
+  lcd.print(seconds);
+  if (digitalRead(button1) == LOW && !timerRunning) {
+    minutes++;
+  }
+  if (digitalRead(button2) == LOW && !timerRunning) {
+    seconds++;
+  }
+  if (digitalRead(button3) == LOW && !timerRunning) {
+    timerRunning = true;
+    previousMillis = millis();
+    digitalWrite(relay, LOW);
+  }
+  if (digitalRead(button4) == LOW && timerRunning) {
+    timerRunning = false;
+    minutes = 0;
+    seconds = 0;
+    digitalWrite(relay, HIGH);
+  }
+}
+
+
+
+
